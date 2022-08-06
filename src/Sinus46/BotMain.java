@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Scanner;
 
-public class Main {
+public class BotMain {
 
     public static void main(String[] args) throws LoginException, InterruptedException {
         System.out.println("Created by Sinus46");
