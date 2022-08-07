@@ -58,20 +58,26 @@ public class Trick {
                 talonSperrer);
     }
 
-    public Trick randomizedCopy(int perspective){
+    public Trick randomizedCopy(int perspective, boolean randomizeHand){
         if (deck.size() == 0) return this.copy();
         List<Card> unknown = new ArrayList<>(deck.subList(0, deck.size() - 1));
-        unknown.addAll(hands[1-perspective].content);
+        if (randomizeHand) {
+            unknown.addAll(hands[1 - perspective].content);
+        }
         Collections.shuffle(unknown);
-        Hand newHand = new Hand(new ArrayList<>(unknown.subList(0, hands[1-perspective].content.size())));
-        newHand.score = hands[1-perspective].score;
-        newHand.viennaScore = hands[1-perspective].viennaScore;
-        unknown.removeAll(newHand.content);
+        Hand[] newHands = new Hand[2];
+        if (randomizeHand){
+            Hand newHand = new Hand(new ArrayList<>(unknown.subList(0, hands[1 - perspective].content.size())));
+            newHand.score = hands[1-perspective].score;
+            newHand.viennaScore = hands[1-perspective].viennaScore;
+            unknown.removeAll(newHand.content);
+            newHands[1-perspective] = newHand;
+        } else {
+            newHands[1-perspective] = hands[1-perspective];
+        }
         List<Card> newDeck = new ArrayList<>(unknown);
         newDeck.add(trump);
-        Hand[] newHands = new Hand[2];
         newHands[perspective] = hands[perspective];
-        newHands[1-perspective] = newHand;
         return new Trick(stich,
                 geschichte,
                 playing,

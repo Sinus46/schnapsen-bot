@@ -54,8 +54,16 @@ public class Game extends JFrame implements ActionListener {
         }
         new Thread(() -> {
             if (trick.player() == 1 - vorhand) {
-                Integer best = Tree.simulate(trick, scores(), 3e+9).entrySet().stream()
-                        .max(Comparator.comparingInt(Map.Entry::getValue)).get().getKey();
+                int best;
+                switch (aiType) {
+                    case App.NORMAL_AI -> best = Tree.normalAI(trick, scores(), 3e+9).entrySet().stream()
+                            .max(Comparator.comparingInt(Map.Entry::getValue)).get().getKey();
+                    case App.UNFAIR_AI -> best = Tree.unfairAI(trick, scores(), 3e+9).entrySet().stream()
+                            .max(Comparator.comparingInt(Map.Entry::getValue)).get().getKey();
+                    case App.GODLY_AI -> best = Tree.godlyAI(trick, scores(), 3e+9).entrySet().stream()
+                            .max(Comparator.comparingInt(Map.Entry::getValue)).get().getKey();
+                    default -> throw new RuntimeException();
+                }
                 if (best >= 0) {
                     Card bestCard = trick.getHand(trick.player()).content().get(best);
                     if (trick.isLeading()) {

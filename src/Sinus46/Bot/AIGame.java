@@ -51,7 +51,7 @@ public class AIGame extends ListenerAdapter {
                         ThreadLocker.pause();
                     }else{
                         sendMessages();
-                        Integer best = Tree.simulate(trick, scores, 3e+9).entrySet().stream().max(Comparator.comparingInt(Map.Entry::getValue)).get().getKey();
+                        Integer best = Tree.normalAI(trick, scores, 3e+9).entrySet().stream().max(Comparator.comparingInt(Map.Entry::getValue)).get().getKey();
                         if (best >= 0) {
                             Card bestCard = trick.getHand(trick.player()).content().get(best);
                             ansage = trick.getHand(trick.player()).isPaired(bestCard) && trick.isLeading();

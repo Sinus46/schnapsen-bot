@@ -10,7 +10,7 @@ import java.util.Random;
 public class Tree {
 
 
-    public static HashMap<Integer, Integer> simulate(Trick trick, int[] scores, double thinkingTime){
+    public static HashMap<Integer, Integer> normalAI(Trick trick, int[] scores, double thinkingTime){
         long time = System.nanoTime();
         HashMap<Integer, Integer> results = new HashMap<>();
         for (int i = -2; i < 5; i++) {
@@ -20,10 +20,47 @@ public class Tree {
             int best = -3;
             long t = System.nanoTime();
             for (int j = 0; System.nanoTime() - t < thinkingTime/100; j++) {
-                best = bestMove(trick.randomizedCopy(trick.player()), j, scores);
+                best = bestMove(trick.randomizedCopy(trick.player(), true), j, scores);
             }
             results.put(best, results.get(best) == null ? 1: results.get(best) + 1);
         }
+//        System.out.println("Time required: " + (System.nanoTime() - time)/1000000000);
+//        System.out.println("Results: " + results);
+//        System.out.println("Cards: " + trick.getHand(trick.player()));
+        return results;
+    }
+
+    public static HashMap<Integer, Integer> unfairAI(Trick trick, int[] scores, double thinkingTime){
+        long time = System.nanoTime();
+        HashMap<Integer, Integer> results = new HashMap<>();
+        for (int i = -2; i < 5; i++) {
+            results.put(i, 0);
+        }
+        for (int i = 0; i < 100; i++){
+            int best = -3;
+            long t = System.nanoTime();
+            for (int j = 0; System.nanoTime() - t < thinkingTime/100; j++) {
+                best = bestMove(trick.randomizedCopy(trick.player(), false), j, scores);
+            }
+            results.put(best, results.get(best) == null ? 1: results.get(best) + 1);
+        }
+//        System.out.println("Time required: " + (System.nanoTime() - time)/1000000000);
+//        System.out.println("Results: " + results);
+//        System.out.println("Cards: " + trick.getHand(trick.player()));
+        return results;
+    }
+    public static HashMap<Integer, Integer> godlyAI(Trick trick, int[] scores, double thinkingTime){
+        long time = System.nanoTime();
+        HashMap<Integer, Integer> results = new HashMap<>();
+        for (int i = -2; i < 5; i++) {
+            results.put(i, 0);
+        }
+        int best = -3;
+        long t = System.nanoTime();
+        for (int j = 0; System.nanoTime() - t < thinkingTime; j++) {
+            best = bestMove(trick.copy(), j, scores);
+        }
+        results.put(best, results.get(best) == null ? 1: results.get(best) + 1);
 //        System.out.println("Time required: " + (System.nanoTime() - time)/1000000000);
 //        System.out.println("Results: " + results);
 //        System.out.println("Cards: " + trick.getHand(trick.player()));
