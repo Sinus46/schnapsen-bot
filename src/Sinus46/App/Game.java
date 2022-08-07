@@ -6,19 +6,19 @@ import Sinus46.Schnapsen.Trick;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.Comparator;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class Game extends JFrame implements ActionListener {
     private Trick trick;
     private int vorhand = 0;
-    private final int[] scores = {7, 7};
+    private final ArrayList<int[]> history = new ArrayList<>();
     private Card ansage = null;
     private int ansagePlayer = 0;
     private final String aiType;
@@ -38,17 +38,23 @@ public class Game extends JFrame implements ActionListener {
     }
 
     public void play() {
-        update(trick.player() == 0);
+        update(trick.player() == vorhand);
+        if (Arrays.stream(scores()).anyMatch((s -> s <= 0))) {
+            return;
+        }
         if (trick.ergebnis() != 0) {
-            scores[(trick.player() + vorhand) % 2] -= trick.ergebnis();
+            int[] result = new int[]{0, 0};
+            result[(trick.player() + vorhand) % 2] = trick.ergebnis();
+            history.add(result);
             vorhand = (vorhand + 1) % 2;
             trick = new Trick(false);
+            ansage = null;
             play();
             return;
         }
         new Thread(() -> {
-            if (trick.player() == 1) {
-                Integer best = Tree.simulate(trick, scores, 3e+9).entrySet().stream()
+            if (trick.player() == 1 - vorhand) {
+                Integer best = Tree.simulate(trick, scores(), 3e+9).entrySet().stream()
                         .max(Comparator.comparingInt(Map.Entry::getValue)).get().getKey();
                 if (best >= 0) {
                     Card bestCard = trick.getHand(trick.player()).content().get(best);
@@ -73,7 +79,7 @@ public class Game extends JFrame implements ActionListener {
             JPanel main = new JPanel(new BorderLayout());
 
             Box hand = new Box(BoxLayout.X_AXIS);
-            for (Card card : trick.getHand(0).content()) {
+            for (Card card : trick.getHand(vorhand).content()) {
                 hand.add(createButton(card, enabled));
                 hand.add(Box.createHorizontalStrut(5));
             }
@@ -81,7 +87,7 @@ public class Game extends JFrame implements ActionListener {
             bottom.add(hand);
 
             Box options = new Box(BoxLayout.Y_AXIS);
-            if (trick.getHand(0).canExchange()) {
+            if (trick.getHand(vorhand).canExchange()) {
                 JButton btn = new JButton("Trumpfunter austauschen");
                 btn.setActionCommand(TAUSCH);
                 btn.addActionListener(this);
@@ -100,10 +106,21 @@ public class Game extends JFrame implements ActionListener {
             }
             bottom.add(options);
 
+            Box infoPanel = new Box(BoxLayout.Y_AXIS);
             JPanel trumpPanel = new JPanel();
-            Icon trump = new ImageIcon(fetchCard(trick.getTrump().toString()));
             trumpPanel.add(new JLabel("Trumpf: "));
-            trumpPanel.add(new JLabel(trump));
+            if (trick.talonSize() == 0) {
+                trumpPanel.add(new JLabel(Card.parseSuit(trick.getTrump().suit(), false)));
+            } else {
+                Icon trump = new ImageIcon(fetchCard(trick.getTrump().toString()));
+                trumpPanel.add(new JLabel(trump));
+            }
+            infoPanel.add(trumpPanel);
+            switch (trick.talonSize()) {
+                case -1 -> infoPanel.add(new JLabel("Talon: GESPERRT"));
+                case 0 -> infoPanel.add(new JLabel("Talon: Aus"));
+                default -> infoPanel.add(new JLabel("Talon: " + trick.talonSize() + " übrig"));
+            }
 
             JPanel top = new JPanel();
             JLabel aiLabel = new JLabel(aiType);
@@ -123,14 +140,60 @@ public class Game extends JFrame implements ActionListener {
                 center.add(ansagePanel, ansagePlayer == 1 ? BorderLayout.NORTH : BorderLayout.SOUTH);
             }
 
-            JPanel pointPanel = new JPanel();
-            pointPanel.add(new JLabel("Deine Punktenanzahl: " + trick.scores()[0]));
+            TableModel model = new AbstractTableModel() {
+                @Override
+                public int getRowCount() {
+                    return history.size() + 1;
+                }
+
+                @Override
+                public int getColumnCount() {
+                    return 2;
+                }
+
+                @Override
+                public String getColumnName(int column) {
+                    if (column == 0) {
+                        return "Du";
+                    }
+                    if (column == 1) {
+                        return aiType + " AI";
+                    }
+                    throw new RuntimeException();
+                }
+
+                @Override
+                public Object getValueAt(int rowIndex, int columnIndex) {
+                    if (rowIndex == history.size()) {
+                        return scores()[columnIndex];
+                    }
+                    return history.get(rowIndex)[columnIndex];
+                }
+
+                @Override
+                public boolean isCellEditable(int rowIndex, int columnIndex) {
+                    return false;
+                }
+            };
+            Box scoreBoard = new Box(BoxLayout.Y_AXIS);
+            scoreBoard.setPreferredSize(new Dimension(100, Integer.MAX_VALUE));
+            JTable table = new JTable(model);
+            table.setFocusable(false);
+            table.setRowSelectionAllowed(false);
+            table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+            table.getTableHeader().setResizingAllowed(false);
+            table.getTableHeader().setReorderingAllowed(false);
+            JScrollPane scrollPane = new JScrollPane(table);
+            scrollPane.setPreferredSize(new Dimension(100, 100));
+            scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+            scoreBoard.add(scrollPane);
+            scoreBoard.add(new JLabel("" + trick.scores()[vorhand]));
 
             main.add(center, BorderLayout.CENTER);
             main.add(bottom, BorderLayout.SOUTH);
-            main.add(trumpPanel, BorderLayout.EAST);
+            main.add(infoPanel, BorderLayout.EAST);
             main.add(top, BorderLayout.NORTH);
-            main.add(pointPanel, BorderLayout.WEST);
+            main.add(scoreBoard, BorderLayout.WEST);
             setContentPane(main);
             validate();
         } catch (Exception ex) {
@@ -148,7 +211,7 @@ public class Game extends JFrame implements ActionListener {
         JButton btn = new JButton();
         btn.setActionCommand(card.toString());
         btn.addActionListener(this);
-        btn.setEnabled(enabled);
+        btn.setEnabled(enabled && trick.getHand(vorhand).isPlayable(card));
         btn.setIcon(icon);
         btn.setMargin(new Insets(0, 0, 0, 0));
         return btn;
@@ -162,7 +225,7 @@ public class Game extends JFrame implements ActionListener {
             case TAUSCH -> trick.exchange();
             default -> {
                 trick.play(Card.evaluate(e.getActionCommand()));
-                ansage = trick.getHand(trick.player()).pairOf(Card.evaluate(e.getActionCommand()));
+                ansage = trick.getHand(vorhand).pairOf(Card.evaluate(e.getActionCommand()));
                 if (ansage != null) {
                     ansagePlayer = 0;
                 }
@@ -171,5 +234,7 @@ public class Game extends JFrame implements ActionListener {
         play();
     }
 
-
+    private int[] scores() {
+        return new int[]{7 - history.stream().mapToInt((a -> a[0])).sum(), 7 - history.stream().mapToInt((a -> a[1])).sum()};
+    }
 }
