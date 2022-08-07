@@ -2,7 +2,7 @@
   <artifact type="jar" name="bot:jar">
     <output-path>$PROJECT_DIR$/out/artifacts/bot_jar</output-path>
     <root id="archive" name="bot.jar">
-      <element id="module-output" name="untitled" />
+      <element id="module-output" name="Schnapsen" />
       <element id="extracted-dir" path="$PROJECT_DIR$/../JDA.jar" path-in-jar="/" />
     </root>
   </artifact>
