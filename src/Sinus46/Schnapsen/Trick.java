@@ -1,5 +1,6 @@
 package Sinus46.Schnapsen;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -275,14 +276,19 @@ public class Trick {
         }
 
         public boolean isPaired(Card card){
-            if (card.index() != 1 && card.index() != 2) return false;
+            return pairOf(card) != null;
+        }
+
+        @Nullable
+        public Card pairOf(Card card) {
+            if (card.index() != 1 && card.index() != 2) return null;
             for (Card partner:content) {
                 if (partner.suit() == card.suit()){
-                    if (card.index() == 1 && partner.index() == 2) return true;
-                    if (card.index() == 2 && partner.index() == 1) return true;
+                    if (card.index() == 1 && partner.index() == 2) return partner;
+                    if (card.index() == 2 && partner.index() == 1) return partner;
                 }
             }
-            return false;
+            return null;
         }
 
         public boolean canExchange(){
