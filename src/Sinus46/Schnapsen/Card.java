@@ -17,7 +17,7 @@ public record Card(int suit, int index, boolean german){
         } else {
             return switch (suit) {
                 case 0 -> "♠";
-                case 1 -> "❤";
+                case 1 -> "♥";
                 case 2 -> "♣";
                 case 3 -> "♦";
                 default -> throw new IllegalArgumentException("Illegal Suit");
@@ -58,6 +58,30 @@ public record Card(int suit, int index, boolean german){
             };
         }
         return sum;
+    }
+    public static Card evaluate(String str) {
+        String index = str.substring(0, 1);
+        if (index.equals("1")) {
+            index = str.substring(0, 2);
+        }
+        String suit = str.replaceAll(index, "");
+        return new Card(switch (suit) {
+            case "\ud83c\udf43", "♠" -> 0;
+            case "❤", "♥" -> 1;
+            case "\ud83c\udf30", "♣" -> 2;
+            case "\ud83d\udd14", "♦" -> 3;
+            default -> -1;
+        }, switch (index) {
+            case "U", "J" -> 0;
+            case "O", "Q" -> 1;
+            case "K" -> 2;
+            case "X", "10" -> 3;
+            case "A", "D" -> 4;
+            default -> -1;
+        }, switch (suit) {
+            case "\ud83c\udf43", "❤", "\ud83c\udf30", "\ud83d\udd14" -> true;
+            default -> false;
+        });
     }
 
     @Override
