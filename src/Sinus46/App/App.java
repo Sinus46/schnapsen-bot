@@ -18,6 +18,7 @@ public class App extends JFrame implements ActionListener {
         super("Schnapsen");
         setSize(500, 500);
         setResizable(false);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
         setVisible(true);
         setContentPane(mainMenu());
         validate();
