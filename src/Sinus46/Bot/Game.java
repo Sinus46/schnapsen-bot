@@ -32,6 +32,7 @@ public class Game extends ListenerAdapter {
     private final String uuid = UUID.randomUUID().toString();
     private int vorhand = 0;
     private boolean ansage = false;
+    private ThreadLocker locker = new ThreadLocker();
 
     public Game(List<User> gamers, JDA jda, int lobbyID, MessageChannel channel, ResourceBundle resources, boolean german){
         this.gamers = gamers;
@@ -49,7 +50,7 @@ public class Game extends ListenerAdapter {
                 trick = new Trick(german);
                 while (trick.ergebnis() == 0) {
                     sendMessages();
-                    ThreadLocker.pause();
+                    locker.pause();
                 }
                 scores[(trick.player() + vorhand) % 2] -= trick.ergebnis();
                 vorhand = (vorhand + 1) % 2;
@@ -171,6 +172,6 @@ public class Game extends ListenerAdapter {
                 ansage = (event.getButton().getStyle() == ButtonStyle.SUCCESS && trick.isLeading());
             }
         }
-        ThreadLocker.resume();
+        locker.resume();
     }
 }

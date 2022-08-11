@@ -30,6 +30,7 @@ public class AIGame extends ListenerAdapter {
     private final String uuid = UUID.randomUUID().toString();
     private int vorhand = 0;
     private boolean ansage = false;
+    private ThreadLocker locker = new ThreadLocker();
 
     public AIGame(User gamer, JDA jda, int lobbyID, MessageChannel channel, ResourceBundle resources, boolean german){
         this.gamer = gamer;
@@ -48,7 +49,7 @@ public class AIGame extends ListenerAdapter {
                 while (trick.ergebnis() == 0) {
                     if (trick.player() == vorhand){
                         sendMessages();
-                        ThreadLocker.pause();
+                        locker.pause();
                     }else{
                         sendMessages();
                         Integer best = Tree.normalAI(trick, scores, 3e+9).entrySet().stream().max(Comparator.comparingInt(Map.Entry::getValue)).get().getKey();
@@ -162,6 +163,6 @@ public class AIGame extends ListenerAdapter {
                 trick.play(Integer.parseInt(id[1]));
             }
         }
-        ThreadLocker.resume();
+        locker.resume();
     }
 }

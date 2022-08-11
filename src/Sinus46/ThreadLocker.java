@@ -4,11 +4,11 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public final class ThreadLocker {
+public class ThreadLocker {
 
-    private static final Lock lock = new ReentrantLock();
-    private static final Condition condition = lock.newCondition();
-    public static void pause(){
+    private final Lock lock = new ReentrantLock();
+    private final Condition condition = lock.newCondition();
+    public void pause(){
         lock.lock();
         try {
             condition.await();
@@ -17,7 +17,7 @@ public final class ThreadLocker {
             lock.unlock();
         }
     }
-    public static void resume(){
+    public void resume(){
         lock.lock();
         try {
             condition.signal();
